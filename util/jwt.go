@@ -20,7 +20,7 @@ func GenerateJWT(issuer string) (string, error) {
 
 func ParseJWT(cookie string) (string, error) {
 	token, err := jwt.ParseWithClaims(cookie, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("blkcor"), nil
+		return []byte(SecretKey), nil
 	})
 	if err != nil || !token.Valid {
 		return "", err
