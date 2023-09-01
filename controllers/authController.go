@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"fmt"
 	"github.blkcor.go-admin/database"
 	"github.blkcor.go-admin/models"
 	"github.blkcor.go-admin/util"
 	"github.com/gofiber/fiber/v2"
-	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
 )
@@ -23,20 +21,14 @@ func Register(ctx *fiber.Ctx) error {
 			"message": "The password entered twice is inconsistent",
 		})
 	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
 
-	if err != nil {
-		ctx.Status(501)
-		return ctx.JSON(fiber.Map{
-			"message": fmt.Sprintf("an error happen when hashing the password: %s", err.Error()),
-		})
-	}
 	user := models.User{
 		FirstName: data["first_name"],
 		LastName:  data["last_name"],
 		Email:     data["email"],
-		Password:  string(hashedPassword),
 	}
+	user.SetPassword(data["password"])
+
 	//check if the email is in use
 	var userTmp models.User
 	if database.DB.Where("email = ?", user.Email).First(&userTmp); userTmp.Id != 0 {
@@ -46,6 +38,21 @@ func Register(ctx *fiber.Ctx) error {
 		})
 	}
 	database.DB.Create(&user)
+	return ctx.JSON(user)
+}
+
+func User(ctx *fiber.Ctx) error {
+	cookie := ctx.Cookies("jwt")
+	issuer, _ := util.ParseJWT(cookie)
+
+	var user models.User
+	database.DB.Where("id", issuer).Find(&user)
+	if user.Id == 0 {
+		ctx.Status(fiber.StatusConflict)
+		return ctx.JSON(fiber.Map{
+			"message": "Couldn't find the user, maybe you account has been deleted!Please associate with the admin if you have further issues!",
+		})
+	}
 	return ctx.JSON(user)
 }
 
@@ -65,7 +72,7 @@ func Login(ctx *fiber.Ctx) error {
 	}
 
 	//校验用户的密码是否正确
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data["password"])); err != nil {
+	if err := user.ComparePassword(data["password"]); err != nil {
 		ctx.Status(403)
 		return ctx.JSON(fiber.Map{
 			"message": "wrong email or password",
