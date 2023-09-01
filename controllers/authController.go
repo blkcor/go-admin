@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.blkcor.go-admin/database"
 	"github.blkcor.go-admin/models"
+	"github.blkcor.go-admin/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
@@ -32,8 +32,8 @@ func Register(ctx *fiber.Ctx) error {
 		})
 	}
 	user := models.User{
-		FirstName: data["firstName"],
-		LastName:  data["lastName"],
+		FirstName: data["first_name"],
+		LastName:  data["last_name"],
 		Email:     data["email"],
 		Password:  string(hashedPassword),
 	}
@@ -76,15 +76,7 @@ func Login(ctx *fiber.Ctx) error {
 
 	//用户登录成功
 	ctx.Status(200)
-
-	//claims = payload + signature
-	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    strconv.Itoa(int(user.Id)),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
-	})
-
-	//generate the token
-	token, err := claims.SignedString([]byte("blkcor"))
+	token, err := util.GenerateJWT(strconv.Itoa(int(user.Id)))
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
