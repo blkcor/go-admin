@@ -10,7 +10,7 @@ import (
 
 func main() {
 	database.GetDatabaseConnection()
-	fmt.Println(database.DB)
+
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
