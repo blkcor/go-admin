@@ -34,6 +34,8 @@ func CreateRole(ctx *fiber.Ctx) error {
 		Permissions: permissions,
 	}
 	database.DB.Create(&role)
+	// 设置角色与权限之间的关联关系
+	database.DB.Model(&role).Association("Permissions").Append(permissions)
 	return ctx.JSON(role)
 }
 
