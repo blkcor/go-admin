@@ -14,7 +14,8 @@ func GetDatabaseConnection() {
 	if err != nil {
 		panic("Couldn't connect to the database!" + err.Error())
 	}
-	err = db.AutoMigrate(&models.User{})
+	err = db.AutoMigrate(&models.User{}, &models.Role{}, &models.Permission{})
+
 	if err != nil {
 		fmt.Println("Something went wrong when connecting to the database: ", err.Error())
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 func Register(ctx *fiber.Ctx) error {
-	var data map[string]string
+	var data map[string]interface{}
 	if err := ctx.BodyParser(&data); err != nil {
 		return err
 	}
@@ -22,12 +22,14 @@ func Register(ctx *fiber.Ctx) error {
 		})
 	}
 
+	//注册的用户默认分配角色
 	user := models.User{
-		FirstName: data["first_name"],
-		LastName:  data["last_name"],
-		Email:     data["email"],
+		FirstName: data["first_name"].(string),
+		LastName:  data["last_name"].(string),
+		Email:     data["email"].(string),
+		RoleId:    1,
 	}
-	user.SetPassword(data["password"])
+	user.SetPassword(data["password"].(string))
 
 	//check if the email is in use
 	var userTmp models.User
