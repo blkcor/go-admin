@@ -21,7 +21,6 @@ func Register(ctx *fiber.Ctx) error {
 			"message": "The password entered twice is inconsistent",
 		})
 	}
-
 	//注册的用户默认分配角色
 	user := models.User{
 		FirstName: data["first_name"].(string),
@@ -117,4 +116,40 @@ func Logout(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{
 		"message": "LOGOUT SUCCESSFULLY",
 	})
+}
+
+func UpdateInfo(ctx *fiber.Ctx) error {
+	var user models.User
+	if err := ctx.BodyParser(&user); err != nil {
+		return err
+	}
+
+	cookie := ctx.Cookies("jwt")
+	issuer, _ := util.ParseJWT(cookie)
+
+	database.DB.Model(&user).Where("id", issuer).Updates(user)
+
+	return ctx.JSON(user)
+}
+
+func UpdatePassword(ctx *fiber.Ctx) error {
+	var data map[string]interface{}
+	if err := ctx.BodyParser(&data); err != nil {
+		return err
+	}
+
+	cookie := ctx.Cookies("jwt")
+	issuer, _ := util.ParseJWT(cookie)
+	if data["password"] != data["password_confirm"] {
+		ctx.Status(400)
+		return ctx.JSON(fiber.Map{
+			"message": "The password entered twice is inconsistent",
+		})
+	}
+	user := models.User{}
+	user.SetPassword(data["password"].(string))
+
+	database.DB.Model(&models.User{}).Where("id", issuer).Updates(user)
+
+	return ctx.JSON(user)
 }

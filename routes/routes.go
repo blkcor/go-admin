@@ -14,6 +14,8 @@ func Setup(app *fiber.App) {
 	//the routes below need to be authenticated!
 	app.Post("/api/logout", controllers.Logout)
 	app.Get("/api/user", controllers.User)
+	app.Post("api/updateInfo", controllers.UpdateInfo)
+	app.Post("api/updatePassword", controllers.UpdatePassword)
 
 	app.Get("/api/users", controllers.AllUsers)
 	app.Post("/api/users", controllers.CreateUser)
